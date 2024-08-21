@@ -20,7 +20,8 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
-
+import Avatar from "@mui/material/Avatar";
+import { deepOrange } from "@mui/material/colors";
 const navigation = {
   categories: [
     {
@@ -232,7 +233,7 @@ export default function Header() {
                       ))}
                     </div>
                     {category.sections.map((section) => (
-                      <div key={section.name}  >
+                      <div key={section.name}>
                         <p
                           id={`${category.id}-${section.id}-heading-mobile`}
                           className="font-medium text-gray-900">
@@ -399,7 +400,7 @@ export default function Header() {
                               </div>
                               <div className="row-start-1 grid grid-cols-3 gap-x-8 gap-y-10 text-sm">
                                 {category.sections.map((section) => (
-                                  <div key={section.name} >
+                                  <div key={section.name}>
                                     <p
                                       id={`${section.name}-heading`}
                                       className="font-medium text-gray-900">

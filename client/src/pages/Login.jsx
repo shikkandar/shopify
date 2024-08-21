@@ -2,8 +2,10 @@ import { useFormik } from "formik";
 import { Eye, EyeOff, Mail } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerSchema } from "../../schemas/formValidation";
+import { loginSchema, registerSchema } from "../../schemas/formValidation";
 import Tooltip from "@mui/material/Tooltip";
+import toast, { Toaster } from "react-hot-toast";
+import { loginUser } from "../../routes/authRoutes";
 
 const Login = () => {
   const {
@@ -19,13 +21,22 @@ const Login = () => {
       email: "",
       password: "",
     },
-    validationSchema: registerSchema,
-    onSubmit: (values) => {
-      try {
-        console.log("Login:", values);
-      } catch (error) {
-        console.error(error);
-      }
+    validationSchema: loginSchema,
+    onSubmit: async (values) => {
+      let loginPromise = loginUser(values);
+
+      toast.promise(loginPromise, {
+        loading: "loding...",
+        success: (res) => {
+          return res.message;
+        },
+        error: (err) => err.message,
+      });
+
+      loginPromise.then((res) => {
+        const token = res.token;
+        localStorage.setItem("token", token);
+      });
     },
   });
 
@@ -37,6 +48,10 @@ const Login = () => {
 
   return (
     <div>
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+      />
       <section className="relative flex flex-wrap lg:h-screen lg:items-center">
         <div className="w-full px-4 py-12 sm:px-6 sm:py-16 lg:w-1/2 lg:px-8 lg:py-24">
           <div className="mx-auto max-w-lg text-center">

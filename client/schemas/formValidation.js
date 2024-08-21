@@ -19,3 +19,13 @@ export const registerSchema = object({
     .required("Confirm Password is required")
     .oneOf([ref("password"), null], "Passwords must match"),
 });
+
+export const loginSchema = object({
+  email: string().required("Email is required").email("Invalid email"),
+  password: string()
+    .required("Password is required")
+    .matches(
+      passwordRegex,
+      "Must include one uppercase, one number, one special character, and be at least 8 characters."
+    ),
+});

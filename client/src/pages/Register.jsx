@@ -1,10 +1,18 @@
-import { CircleCheckBig, Eye, EyeOff, Mail, UserRoundPlus } from "lucide-react";
+import {
+  CircleCheckBig,
+  Eye,
+  EyeOff,
+  Loader,
+  Mail,
+  UserRoundPlus,
+} from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { registerSchema } from "../../schemas/formValidation";
 import Tooltip from "@mui/material/Tooltip";
-
+import { registerUser } from "../../routes/authRoutes";
+import toast, { Toaster } from "react-hot-toast";
 const Register = () => {
   const navigate = useNavigate();
 
@@ -26,11 +34,21 @@ const Register = () => {
     },
     validationSchema: registerSchema,
     onSubmit: async (values) => {
-      try {
-        console.log(values);
-      } catch (error) {
-        console.error(error);
-      }
+      let registerPromise = registerUser(values);
+
+      toast.promise(registerPromise, {
+        loading: "Registering...",
+        success: (res) => {
+          return res.message;
+        },
+        error: (err) => err.message,
+      });
+
+      registerPromise.then((res) => {
+        const token=res.token;
+        localStorage.setItem("token", token);
+    
+      });
     },
   });
   const [passIcon, setPassIcon] = useState(false);
@@ -43,6 +61,10 @@ const Register = () => {
   };
   return (
     <div>
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+      />
       <section className="relative flex flex-wrap lg:h-screen lg:items-center">
         <div className="w-full px-4 py-12 sm:px-6 sm:py-16 lg:w-1/2 lg:px-8 lg:py-24">
           <div className="mx-auto max-w-lg text-center">
@@ -247,8 +269,9 @@ const Register = () => {
 
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="inline-block rounded-lg bg-blue-500 px-5 py-3 text-sm font-medium text-white">
-                Sign in
+                {isSubmitting ? <Loader className="animate-spin" /> : "Sign in"}
               </button>
             </div>
           </form>
