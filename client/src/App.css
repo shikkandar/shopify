@@ -1,0 +1,5 @@
+/* In your CSS file or <style> tag */
+.input-focus:focus {
+    border-color: #3490dc; /* Replace with your desired color */
+  }
+  
