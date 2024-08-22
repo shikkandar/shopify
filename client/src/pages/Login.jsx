@@ -36,6 +36,7 @@ const Login = () => {
       loginPromise.then((res) => {
         const token = res.token;
         localStorage.setItem("token", token);
+        navigate("/");
       });
     },
   });

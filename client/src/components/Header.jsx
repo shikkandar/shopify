@@ -1,4 +1,5 @@
-import { Fragment, useState } from "react";
+import React, { Fragment, useContext, useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 import {
   Dialog,
   DialogBackdrop,
@@ -19,9 +20,12 @@ import {
   ShoppingBagIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
 import { deepOrange } from "@mui/material/colors";
+import { UserContext } from "../context/ContextProvider";
+import { getUsers } from "../../routes/authRoutes";
+import { Button, Menu, MenuItem } from "@mui/material";
 const navigation = {
   categories: [
     {
@@ -153,8 +157,51 @@ const navigation = {
 };
 
 export default function Header() {
+  const location = useLocation();
+  const pathname = location.pathname;
+  localStorage.setItem("redirect_url", pathname)
+
+  
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const open1 = Boolean(anchorEl);
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, setUser } = useContext(UserContext);
+  console.log(user);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem("token");
+
+      if (token) {
+        try {
+          const decodedToken = jwtDecode(token);
+          if (decodedToken && decodedToken.userId) {
+            const res = await getUsers(decodedToken.userId);
+            setUser(res);
+          } else {
+            console.error("Token does not contain a valid userId.");
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+    };
+
+    fetchData();
+  }, [setUser]);
+
   return (
     <div className="bg-white">
       {/* Mobile menu */}
@@ -277,36 +324,57 @@ export default function Header() {
             </div>
 
             <div className="space-y-6 border-t border-gray-200 px-4 py-6">
-              <div className="flow-root">
-                <p
-                  onClick={() => navigate("/login")}
-                  className="-m-2 cursor-pointer block p-2 font-medium text-gray-900">
-                  Sign in
-                </p>
-              </div>
-              <div className="flow-root">
-                <p
-                  onClick={() => navigate("/register")}
-                  className="-m-2 cursor-pointer block p-2 font-medium text-gray-900">
-                  Create account
-                </p>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-200 px-4 py-6">
-              <a
-                href="#"
-                className="-m-2 flex items-center p-2">
-                <img
-                  alt=""
-                  src="https://tailwindui.com/img/flags/flag-canada.svg"
-                  className="block h-auto w-5 flex-shrink-0"
-                />
-                <span className="ml-3 block text-base font-medium text-gray-900">
-                  CAD
-                </span>
-                <span className="sr-only">, change currency</span>
-              </a>
+              {!user ? (
+                <>
+                  <div className="flow-root">
+                    <p
+                      onClick={() => navigate("/login")}
+                      className="-m-2 cursor-pointer block p-2 font-medium text-gray-900">
+                      Sign in
+                    </p>
+                  </div>
+                  <div className="flow-root">
+                    <p
+                      onClick={() => navigate("/register")}
+                      className="-m-2 cursor-pointer block p-2 font-medium text-gray-900">
+                      Create account
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flow-root">
+                    <p
+                      onClick={() => navigate("/login")}
+                      className="-m-2 cursor-pointer block p-2 font-medium text-gray-900">
+                      Profile
+                    </p>
+                  </div>
+                  <div className="flow-root">
+                    <p
+                      onClick={() => navigate("/register")}
+                      className="-m-2 cursor-pointer block p-2 font-medium text-gray-900">
+                      My Orders
+                    </p>
+                  </div>
+                  {user?.role === "admin" && (
+                    <div className="flow-root">
+                      <p
+                        onClick={() => navigate("/admin/dashboard")}
+                        className="-m-2 cursor-pointer block p-2 font-medium text-gray-900">
+                        Admin dashbord
+                      </p>
+                    </div>
+                  )}
+                  <div className="flow-root">
+                    <p
+                      onClick={handleLogout}
+                      className="-m-2 cursor-pointer block p-2 font-medium text-gray-900">
+                      Logout
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </DialogPanel>
         </div>
@@ -444,36 +512,66 @@ export default function Header() {
               </PopoverGroup>
 
               <div className="ml-auto flex items-center">
-                <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
-                  <p
-                    onClick={() => navigate("/login")}
-                    className="text-sm font-medium cursor-pointer text-gray-700 hover:text-gray-800">
-                    Sign in
-                  </p>
-                  <span
-                    aria-hidden="true"
-                    className="h-6 w-px bg-gray-200"
-                  />
-                  <p
-                    onClick={() => navigate("/register")}
-                    className="text-sm font-medium cursor-pointer text-gray-700 hover:text-gray-800">
-                    Create account
-                  </p>
-                </div>
-
-                <div className="hidden lg:ml-8 lg:flex">
-                  <a
-                    href="#"
-                    className="flex items-center text-gray-700 hover:text-gray-800">
-                    <img
-                      alt=""
-                      src="https://tailwindui.com/img/flags/flag-canada.svg"
-                      className="block h-auto w-5 flex-shrink-0"
+                {!user ? (
+                  <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
+                    <p
+                      onClick={() => navigate("/login")}
+                      className="text-sm font-medium cursor-pointer text-gray-700 hover:text-gray-800">
+                      Sign in
+                    </p>
+                    <span
+                      aria-hidden="true"
+                      className="h-6 w-px bg-gray-200"
                     />
-                    <span className="ml-3 block text-sm font-medium">CAD</span>
-                    <span className="sr-only">, change currency</span>
-                  </a>
-                </div>
+                    <p
+                      onClick={() => navigate("/register")}
+                      className="text-sm font-medium cursor-pointer text-gray-700 hover:text-gray-800">
+                      Create account
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <Avatar
+                      className="cursor-pointer "
+                      onClick={handleClick}
+                      aria-controls={open1 ? "basic-menu" : undefined}
+                      aria-haspopup="true"
+                      aria-expanded={open1 ? "true" : undefined}
+                      sx={{
+                        bgcolor: deepOrange[500],
+                        display: { xs: "none", md: "flex" },
+                      }}>
+                      {user?.username.charAt(0)}
+                    </Avatar>
+                    <Menu
+                      id="basic-menu"
+                      anchorEl={anchorEl}
+                      open={open1}
+                      onClose={handleClose}
+                      MenuListProps={{
+                        "aria-labelledby": "basic-button",
+                      }}>
+                      <MenuItem onClick={handleClose}>Profile</MenuItem>
+                      <MenuItem onClick={handleClose}>My orders</MenuItem>
+                      {user?.role === "admin" && (
+                        <MenuItem
+                          onClick={() => {
+                            handleClose();
+                            navigate("/admin/dashboard");
+                          }}>
+                          Admin Dashbord
+                        </MenuItem>
+                      )}
+                      <MenuItem
+                        onClick={() => {
+                          handleClose();
+                          handleLogout();
+                        }}>
+                        Logout
+                      </MenuItem>
+                    </Menu>
+                  </>
+                )}
 
                 {/* Search */}
                 <div className="flex lg:ml-6">
